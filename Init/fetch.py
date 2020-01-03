@@ -4,6 +4,7 @@ import re
 import time
 import random
 import retrying
+import json
 
 def mtggoldfish(deck_id, header = None):
     """ Retrieves decklist from mtggoldfish.com with user provided deck_id.
@@ -16,9 +17,9 @@ def mtggoldfish(deck_id, header = None):
     Returns
     -------
 
-    maindeck: Dictionary, key:value pairs correspond to {card : number of copies in maindeck.}
-
-    sidedeck: Dictionary, key:value pairs correspond to {card : number of copies in sidedeck.}
+    deck: JSON object containing deck_id, maindeck, and sidedeck. In main deck, a dictionary object,
+    key:value pairs correspond to {card : number of copies in maindeck.} Likewise, sidedeck is a
+    dictionary object, key:value pairs correspond to {card : number of copies in sidedeck.}
 
     """
 
@@ -47,6 +48,13 @@ def mtggoldfish(deck_id, header = None):
     for line in re.split(r'\r|\n',sidedeck_doc)[1:-1]:
         sidedeck[line.split(" ",maxsplit = 1)[1]] = line.split(" ",maxsplit = 1)[0]
 
-    return(maindeck,sidedeck)
+    deck = {}
+
+    deck['deck_id'] = deck_id
+    deck['source'] = 'mtggoldfish'
+    deck['maindeck'] = maindeck
+    deck['sidedeck'] = sidedeck
+
+    return(deck)
 
 if __name__ == "__main__":
