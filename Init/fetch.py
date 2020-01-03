@@ -4,7 +4,8 @@ import re
 import time
 import random
 import retrying
-import json
+import sys
+from dateutil import parser
 
 def mtggoldfish(deck_id, header = None):
     """ Retrieves decklist from mtggoldfish.com with user provided deck_id.
@@ -43,18 +44,26 @@ def mtggoldfish(deck_id, header = None):
     maindeck, sidedeck = {}, {}
 
     for line in re.split(r'\r|\n',maindeck_doc)[:-1]:
-        maindeck[line.split(" ",maxsplit = 1)[1]] = line.split(" ",maxsplit = 1)[0]
+        maindeck[line.split(" ",maxsplit = 1)[1]] = int(line.split(" ",maxsplit = 1)[0])
 
     for line in re.split(r'\r|\n',sidedeck_doc)[1:-1]:
-        sidedeck[line.split(" ",maxsplit = 1)[1]] = line.split(" ",maxsplit = 1)[0]
+        sidedeck[line.split(" ",maxsplit = 1)[1]] = int(line.split(" ",maxsplit = 1)[0])
 
+    # We'll instantiate our output and collect some metadata about the deck.
     deck = {}
-
     deck['deck_id'] = deck_id
+
+    deck['player'] = next(iter(re.findall(r'(?<=\/player\/)\w+',str(soup))),'')
+    deck['format'] = next(iter(re.findall(r'(?<=Format:\s)\w+',str(soup))),'')
+    deck['date'] = next(iter(re.findall(r'\w+\s\d+\,\s\d+',str(soup))),'')
+    deck['tournament_id']= next(iter(re.findall(r'(?<=\/tournament\/)\d+',str(soup))),'')
     deck['source'] = 'mtggoldfish'
+
+    # We now include the maindeck and sidedeck into our output.
     deck['maindeck'] = maindeck
     deck['sidedeck'] = sidedeck
-
+    print(deck)
     return(deck)
 
 if __name__ == "__main__":
+    mtggoldfish(*sys.argv[1:])
